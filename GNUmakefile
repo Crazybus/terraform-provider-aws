@@ -67,5 +67,21 @@ endif
 		--volume "$(GOPATH)/src/$(WEBSITE_REPO)/content/source/layouts:/website/docs/layouts" \
 		hashicorp/middleman-hashicorp:${MIDDLEMAN_VERSION}
 
+website-check:
+	@docker run \
+		--detach \
+		--rm \
+		--name "hc-website-temp" \
+		--publish "4567:4567" \
+		--volume "$(shell pwd)/website:/website" \
+		--volume "$(shell pwd)/website:/ext/providers/aws/website" \
+		--volume "$(GOPATH)/src/$(WEBSITE_REPO)/content:/terraform-website" \
+		--volume "$(GOPATH)/src/$(WEBSITE_REPO)/content/source/assets:/website/docs/assets" \
+		--volume "$(GOPATH)/src/$(WEBSITE_REPO)/content/source/layouts:/website/docs/layouts" \
+		hashicorp/middleman-hashicorp:${MIDDLEMAN_VERSION} \
+		bundle exec middleman server --verbose
+	./scripts/link-check.sh "http://127.0.0.1:4567"
+	@docker stop "hc-website-temp"
+
 .PHONY: build sweep test testacc vet fmt fmtcheck errcheck vendor-status test-compile website
 
